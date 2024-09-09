@@ -1,11 +1,10 @@
-temperature: 1.0
+temperature: 1.0 # sample temperature
 max_step_tokens: 256
 max_tokens: 1024
 select_method: "softmax"
-num_threads: 8
-softmax_temperature: 0.2
+num_threads: 8 # threads in SGLang
+softmax_temperature: 0.2 # temperature in the softmax
 reward_model_type: "llemma"
 policy_model_type: "llemma"
-store_path: ./exp_results/rebase_16/
-width: 16
-note: "llemma policy + llemma34b shepherd score"
+store_path: ./exp_results/rebase_16/ # dir for storing the results
+width: 16 # sample N=16 solutions
