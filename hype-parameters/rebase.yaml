@@ -1,0 +1,11 @@
+temperature: 1.0
+max_step_tokens: 256
+max_tokens: 1024
+select_method: "softmax"
+num_threads: 8
+softmax_temperature: 0.2
+reward_model_type: "llemma"
+policy_model_type: "llemma"
+store_path: ./exp_results/rebase_16/
+width: 16
+note: "llemma policy + llemma34b shepherd score"
