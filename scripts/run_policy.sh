@@ -2,7 +2,7 @@ set -e
 set -x
 #!/bin/bash
 
-MODEL_REPO=/usr1/data/yangzhew/models/llemma-7b_metamath_shepherd
+MODEL_REPO="policy-repo"
 
 
 PORT=30000
