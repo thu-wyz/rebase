@@ -11,12 +11,9 @@ import torch
 import torch.nn.functional as F
 import threading
 
-
-
 def read_jsonl(path: str):
     with open(path) as fh:
         return [json.loads(line) for line in fh.readlines() if line]
-
 
 def get_prompts(args):
     test_cases = read_jsonl(args.input_path)
@@ -24,8 +21,6 @@ def get_prompts(args):
     for test in test_cases:
         prompts.append(test["problem"])
     return prompts, test_cases
-
-
 
 class TreeNode:
     def __init__(self, id, state, score, num_step_tokens=0, parent=None):
@@ -101,10 +96,12 @@ class Tree:
         forks = state.fork(wid)
         depth = node.get_depth()
         for fork in forks:
-            fork.set_score_backend(self.reward_backend)
+            # FIX YUME 2026: Se elimina fork.set_score_backend ya que ProgramState hereda el backend 
+            # o se especifica en la llamada gen() para evitar AttributeError en A100.
             if self.paras["policy_model_type"] == "mistral" or self.paras["policy_model_type"] == "llemma":
                 fork += gen("step", self.paras["max_step_tokens"], stop="Step "+str(depth+2), temperature=self.paras["temperature"])
-                fork += gen("score", max_tokens=0, forward_only=True, logits_require_id=8094)
+                # Se pasa el backend directamente aquí para el cálculo de logits/score
+                fork += gen("score", max_tokens=0, forward_only=True, logits_require_id=8094, backend=self.reward_backend)
             self.running_list.append((fork, node))
             self.history_list.append(fork)
     
@@ -164,8 +161,6 @@ class Tree:
             width -= num
             sum_exp_weights -= weight
         return nodes, select_num
-
-
 
     def select_and_expand(self, depth):
         cand_node_list = []
@@ -240,8 +235,6 @@ def reward_guided_search(s, id, question, ground_truth_answer, paras, reward_hos
     json.dump(answer_for_the_question, open(answer_store_path, "w"), indent=4)
     return answer_for_the_question
 
-
-
 def search_worker(search_dict, lock, prompts, test_examples, paras, policy_host, reward_host):
     while True:
         q_id = None
@@ -256,8 +249,6 @@ def search_worker(search_dict, lock, prompts, test_examples, paras, policy_host,
         state = reward_guided_search.run(id=q_id, question=prompts[q_id], ground_truth_answer=test_examples[q_id], paras=paras, reward_host=RuntimeEndpoint(reward_host), backend=RuntimeEndpoint(policy_host))
         answer_for_the_question = state.ret_value
         return answer_for_the_question
-
-
 
 def main(args):
     prompts, test_examples = get_prompts(args)
@@ -277,9 +268,6 @@ def main(args):
         results.append(answer)
 
     json.dump(results, open(args.output_path, "w"), indent=4)
-
-
-    
 
 if __name__ == "__main__":
     args_parser = argparse.ArgumentParser()
